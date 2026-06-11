@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amazon Product URL Cleaner</title>
+<style>
+:root {
+  --bg: #efe6d2;
+  --paper: #faf3df;
+  --kraft: #8b6f3d;
+  --kraft-deep: #604c28;
+  --kraft-soft: #d4c098;
+  --tape: #d97a1c;
+  --tape-deep: #b86010;
+  --ink: #2a1f0c;
+  --ink-soft: #5c4a30;
+  --rule: #b8a070;
+  --code-bg: #ebe0c4;
+  --ok: #2a5c1a;
+  --warn: #8a4a00;
+  --err: #8b2010;
+}
+[data-theme="dark"] {
+  --bg: #1a1208;
+  --paper: #251c10;
+  --kraft: #c8a868;
+  --kraft-deep: #d8b878;
+  --kraft-soft: #4a3818;
+  --tape: #f09040;
+  --tape-deep: #ffaa50;
+  --ink: #ede0c4;
+  --ink-soft: #c0a878;
+  --rule: #4a3818;
+  --code-bg: #100a04;
+  --ok: #6dd380;
+  --warn: #d4a155;
+  --err: #e88080;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  line-height: 1.55;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0,
+    transparent 40px,
+    rgba(139, 111, 61, 0.04) 40px,
+    rgba(139, 111, 61, 0.04) 41px
+  );
+}
+[data-theme="dark"] body {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0,
+    transparent 40px,
+    rgba(200, 168, 104, 0.03) 40px,
+    rgba(200, 168, 104, 0.03) 41px
+  );
+}
+.wrap { max-width: 1000px; margin: 0 auto; }
+header {
+  background: var(--paper);
+  border: 2px solid var(--kraft);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.75rem;
+  position: relative;
+  border-radius: 3px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+header::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 120px;
+  height: 22px;
+  background: var(--tape);
+  opacity: 0.85;
+  border-radius: 1px;
+}
+h1 {
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--kraft-deep);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+[data-theme="dark"] h1 { color: var(--kraft); }
+.subtitle {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  margin-top: 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+.theme-btn {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink-soft);
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.theme-btn:hover { border-color: var(--tape); color: var(--tape); }
+.lede {
+  font-size: 0.95rem;
+  margin-bottom: 1.75rem;
+  max-width: 65ch;
+}
+.input-section {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 1.5rem;
+  margin-bottom: 1.75rem;
+  border-radius: 3px;
+}
+label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--kraft-deep);
+  margin-bottom: 0.4rem;
+  display: block;
+}
+[data-theme="dark"] label { color: var(--kraft); }
+input[type="text"], textarea {
+  width: 100%;
+  background: var(--code-bg);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  padding: 0.6rem 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  border-radius: 2px;
+}
+textarea { min-height: 70px; resize: vertical; word-break: break-all; }
+input:focus, textarea:focus { outline: 2px solid var(--tape); outline-offset: 1px; }
+.opt-row {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.85rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.opt-row label {
+  margin-bottom: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.85rem;
+  color: var(--ink);
+  font-weight: 500;
+}
+.tag-input {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.tag-input input {
+  width: 200px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.82rem;
+}
+.btn-row {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+button {
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  border-radius: 2px;
+}
+button.primary {
+  background: var(--tape);
+  border-color: var(--tape-deep);
+  color: var(--paper);
+  font-weight: 700;
+}
+[data-theme="dark"] button.primary {
+  color: var(--bg) !important;
+}
+button.primary:hover { background: var(--tape-deep); }
+button:hover { border-color: var(--tape); }
+.results { display: none; }
+.results.show { display: block; }
+.section {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+  border-radius: 3px;
+}
+h2 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--kraft-deep);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+[data-theme="dark"] h2 { color: var(--kraft); }
+.url-out {
+  background: var(--code-bg);
+  border: 1px solid var(--rule);
+  padding: 0.85rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.85rem;
+  word-break: break-all;
+  border-radius: 2px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+.url-out-text { flex: 1; word-break: break-all; }
+.copy-btn {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink-soft);
+  padding: 0.35rem 0.65rem;
+  font-size: 0.72rem;
+  cursor: pointer;
+  border-radius: 2px;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.copy-btn:hover { color: var(--tape); border-color: var(--tape); }
+.label-row {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.4rem 1.25rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+.label-row dt {
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  align-self: center;
+}
+.label-row dd {
+  color: var(--ink);
+  word-break: break-all;
+}
+.stripped {
+  list-style: none;
+  padding: 0;
+  margin-top: 0.5rem;
+}
+.stripped li {
+  padding: 0.45rem 0.65rem;
+  margin-bottom: 0.3rem;
+  background: var(--code-bg);
+  border-left: 4px solid var(--tape);
+  border-radius: 2px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.78rem;
+  word-break: break-all;
+}
+.stripped .param-name {
+  font-weight: 700;
+  color: var(--tape-deep);
+}
+[data-theme="dark"] .stripped .param-name { color: var(--tape); }
+.stripped .param-value {
+  color: var(--ink-soft);
+}
+.error-msg {
+  background: var(--code-bg);
+  border-left: 4px solid var(--err);
+  padding: 0.85rem 1rem;
+  border-radius: 2px;
+  font-size: 0.9rem;
+  color: var(--err);
+  margin-top: 0.85rem;
+}
+.note {
+  background: var(--code-bg);
+  padding: 0.85rem 1rem;
+  border-radius: 2px;
+  font-size: 0.85rem;
+  color: var(--ink);
+  margin-top: 1rem;
+  border-left: 4px solid var(--kraft);
+}
+.note strong { color: var(--kraft-deep); text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.04em; }
+[data-theme="dark"] .note strong { color: var(--kraft); }
+footer {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+footer a { color: var(--tape-deep); text-decoration: none; }
+[data-theme="dark"] footer a { color: var(--tape); }
+footer a:hover { text-decoration: underline; }
+@media (max-width: 700px) {
+  body { padding: 1rem 0.75rem; }
+  h1 { font-size: 1.2rem; }
+  .label-row { grid-template-columns: 1fr; }
+  .label-row dt { margin-top: 0.4rem; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Amazon URL Cleaner</h1>
+    <div class="subtitle">// strip tracking, extract ASIN, generate clean canonical</div>
+  </div>
+  <button class="theme-btn" id="theme-toggle" type="button">Dark</button>
+</header>
+
+<p class="lede">Paste any Amazon product URL. The tool extracts the ASIN, strips tracking parameters, and generates a clean canonical URL. Optionally append your own affiliate tag. Useful for sharing honest links and understanding what tracking lives in those long URLs.</p>
+
+<div class="input-section">
+  <label for="url-input">Amazon product URL</label>
+  <textarea id="url-input" placeholder="https://www.amazon.com/Product-Name-Here/dp/B08N5WRWNW/ref=sr_1_3?keywords=...&qid=...&tag=..." spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
+
+  <div class="opt-row">
+    <label>
+      <input type="checkbox" id="include-title"> Keep product title slug in URL
+    </label>
+    <div class="tag-input">
+      <label for="affiliate-tag" style="display:inline-block; margin: 0;">Your affiliate tag (optional):</label>
+      <input type="text" id="affiliate-tag" placeholder="yourname-20">
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="primary" id="clean-btn" type="button">Clean URL</button>
+    <button id="sample-btn" type="button">Load sample</button>
+    <button id="clear-btn" type="button">Clear</button>
+  </div>
+  <div id="error-box"></div>
+</div>
+
+<div class="results" id="results">
+  <div class="section">
+    <h2>Extracted</h2>
+    <dl class="label-row">
+      <dt>Domain</dt><dd id="out-domain"></dd>
+      <dt>ASIN</dt><dd id="out-asin"></dd>
+      <dt>Title slug</dt><dd id="out-slug"></dd>
+    </dl>
+  </div>
+
+  <div class="section">
+    <h2>Clean canonical URL</h2>
+    <div class="url-out">
+      <div class="url-out-text" id="out-canonical"></div>
+      <button class="copy-btn" data-copy="out-canonical" type="button">Copy</button>
+    </div>
+  </div>
+
+  <div class="section" id="affiliate-section" style="display: none;">
+    <h2>With your affiliate tag</h2>
+    <div class="url-out">
+      <div class="url-out-text" id="out-affiliate"></div>
+      <button class="copy-btn" data-copy="out-affiliate" type="button">Copy</button>
+    </div>
+    <div class="note">
+      <strong>FTC reminder:</strong> when you share affiliate links publicly (in videos, blog posts, social), you must disclose the affiliate relationship clearly and conspicuously, before the link. See <a href="https://github.com/0xelitesystem/affiliate-disclosure-templates">affiliate-disclosure-templates</a> for compliant language.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Tracking parameters stripped</h2>
+    <ul class="stripped" id="stripped-list"></ul>
+  </div>
+</div>
+
+<div class="note" style="margin-top: 1.5rem;">
+  <strong>About this tool:</strong> this generates clean canonical URLs for legitimate uses (sharing honest links, extracting ASINs for your own catalog work, understanding URL tracking). It does not circumvent or remove other people's affiliate tags from URLs you receive - if you replace someone else's tag with your own, that is a violation of most affiliate program terms. Use this tool only for URLs to products you discovered yourself.
+</div>
+
+<footer>
+  <div>Amazon URL Cleaner. MIT licensed. <a href="https://github.com/0xelitesystem/amazon-product-url-cleaner" target="_blank" rel="noopener">View source</a>.</div>
+  <div>Browser-based. No requests to Amazon. Not affiliated with Amazon.</div>
+</footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const themeBtn = $("theme-toggle");
+function setTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  themeBtn.textContent = t === "dark" ? "Light" : "Dark";
+}
+themeBtn.addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") || "light";
+  setTheme(cur === "dark" ? "light" : "dark");
+});
+
+const TRACKING_PARAMS = {
+  "ref": "Referral path - tells Amazon where you came from",
+  "ref_": "Referral path (variant)",
+  "tag": "Affiliate tag",
+  "linkCode": "Affiliate link code",
+  "linkId": "Affiliate link ID",
+  "ascsubtag": "Affiliate sub-tag",
+  "th": "Variant selector hash",
+  "psc": "Variant cache flag",
+  "qid": "Query session ID",
+  "sr": "Search result position",
+  "keywords": "Search keywords used to find product",
+  "sprefix": "Search prefix",
+  "crid": "Click reference ID",
+  "dib": "Search context blob",
+  "dib_tag": "Search context tag",
+  "pd_rd_w": "Page detail random",
+  "pd_rd_wg": "Page detail group",
+  "pd_rd_r": "Page detail referrer",
+  "pd_rd_i": "Page detail item",
+  "pf_rd_p": "Personalization placement",
+  "pf_rd_r": "Personalization referrer",
+  "pf_rd_s": "Personalization slot",
+  "pf_rd_t": "Personalization tracking",
+  "pf_rd_i": "Personalization item",
+  "pf_rd_m": "Personalization marketplace",
+  "spIA": "Sponsored impression",
+  "smid": "Seller marketplace ID",
+  "_encoding": "URL encoding flag",
+  "content-id": "Content ID for promo placements",
+};
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function clean() {
+  $("error-box").innerHTML = "";
+  const input = $("url-input").value.trim();
+  if (!input) {
+    $("error-box").innerHTML = `<div class="error-msg">Paste an Amazon URL to clean.</div>`;
+    $("results").classList.remove("show");
+    return;
+  }
+
+  let url;
+  try {
+    url = new URL(input);
+  } catch (e) {
+    $("error-box").innerHTML = `<div class="error-msg">Not a valid URL: ${escapeHtml(e.message)}</div>`;
+    $("results").classList.remove("show");
+    return;
+  }
+
+  // Verify it's an Amazon domain
+  if (!/(^|\.)amazon\.[a-z.]+$/i.test(url.hostname)) {
+    $("error-box").innerHTML = `<div class="error-msg">URL hostname "${escapeHtml(url.hostname)}" is not an Amazon domain. The cleaner only works on Amazon URLs.</div>`;
+    $("results").classList.remove("show");
+    return;
+  }
+
+  // Extract ASIN: B[A-Z0-9]{9} or 10-digit ISBN-style for books
+  // Common URL patterns: /dp/ASIN, /gp/product/ASIN, /-/dp/ASIN
+  const path = url.pathname;
+  const asinMatch = path.match(/\/(?:dp|gp\/product|gp\/aw\/d|product)\/([A-Z0-9]{10})(?:\/|$)/i);
+
+  let asin = null;
+  let titleSlug = null;
+  if (asinMatch) {
+    asin = asinMatch[1].toUpperCase();
+    // Look for a title slug before /dp/
+    const slugMatch = path.match(/^\/([^/]+)\/(?:dp|gp\/product)\//i);
+    if (slugMatch) titleSlug = slugMatch[1];
+  } else {
+    // Fallback: any 10-char ASIN-like in path
+    const m = path.match(/\/([A-Z0-9]{10})(?:\/|$)/i);
+    if (m && /^[A-Z0-9]{10}$/i.test(m[1])) {
+      asin = m[1].toUpperCase();
+    }
+  }
+
+  if (!asin) {
+    $("error-box").innerHTML = `<div class="error-msg">Could not find an ASIN in the URL. Expected /dp/ASIN, /gp/product/ASIN, or /product/ASIN format. Got path: <code>${escapeHtml(path)}</code></div>`;
+    $("results").classList.remove("show");
+    return;
+  }
+
+  // Build clean URL
+  const keepSlug = $("include-title").checked && titleSlug;
+  let cleanPath = keepSlug ? `/${titleSlug}/dp/${asin}` : `/dp/${asin}`;
+  const cleanUrl = `${url.protocol}//${url.hostname}${cleanPath}`;
+
+  // With affiliate tag
+  const tag = $("affiliate-tag").value.trim();
+  let affiliateUrl = null;
+  if (tag) {
+    affiliateUrl = `${cleanUrl}?tag=${encodeURIComponent(tag)}`;
+  }
+
+  // Identify stripped parameters
+  const stripped = [];
+  url.searchParams.forEach((value, key) => {
+    const desc = TRACKING_PARAMS[key] || (key.startsWith("ref") || key.startsWith("pf_") || key.startsWith("pd_") ? "Tracking parameter" : "Unknown parameter (stripped for safety)");
+    stripped.push({ key, value, desc });
+  });
+
+  // Identify ref segment in path (Amazon often puts /ref=xxx in path)
+  const refInPath = path.match(/\/ref=[^/?#]+/i);
+  if (refInPath) {
+    stripped.push({ key: "ref (in path)", value: refInPath[0], desc: "Referral segment embedded in URL path" });
+  }
+
+  // Render
+  $("out-domain").textContent = url.hostname;
+  $("out-asin").textContent = asin;
+  $("out-slug").textContent = titleSlug || "(none)";
+  $("out-canonical").textContent = cleanUrl;
+
+  if (affiliateUrl) {
+    $("out-affiliate").textContent = affiliateUrl;
+    $("affiliate-section").style.display = "block";
+  } else {
+    $("affiliate-section").style.display = "none";
+  }
+
+  const strippedEl = $("stripped-list");
+  if (stripped.length === 0) {
+    strippedEl.innerHTML = `<li><em style="color: var(--ink-soft);">No tracking parameters found. URL was already clean.</em></li>`;
+  } else {
+    strippedEl.innerHTML = stripped.map(s => {
+      const v = s.value.length > 60 ? s.value.substring(0, 50) + "..." : s.value;
+      return `<li><span class="param-name">${escapeHtml(s.key)}</span><span class="param-value"> = ${escapeHtml(v)}</span><br><span style="color: var(--ink-soft); font-size: 0.78rem;">${escapeHtml(s.desc)}</span></li>`;
+    }).join("");
+  }
+
+  $("results").classList.add("show");
+}
+
+document.addEventListener("click", async (e) => {
+  if (e.target.classList.contains("copy-btn")) {
+    const target = $(e.target.dataset.copy);
+    if (!target) return;
+    const text = target.textContent;
+    try {
+      await navigator.clipboard.writeText(text);
+      const orig = e.target.textContent;
+      e.target.textContent = "Copied";
+      setTimeout(() => { e.target.textContent = orig; }, 1500);
+    } catch (err) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch (e2) {}
+      document.body.removeChild(ta);
+    }
+  }
+});
+
+$("clean-btn").addEventListener("click", clean);
+
+$("clear-btn").addEventListener("click", () => {
+  $("url-input").value = "";
+  $("affiliate-tag").value = "";
+  $("results").classList.remove("show");
+  $("error-box").innerHTML = "";
+});
+
+$("sample-btn").addEventListener("click", () => {
+  $("url-input").value = "https://www.amazon.com/Sony-WH-1000XM5-Industry-Leading-Comfortable-Hands-Free/dp/B0BXYCS74H/ref=sr_1_2?crid=1KQTHJ6MR9V8L&dib=eyJ2IjoiMSJ9.example&dib_tag=se&keywords=sony+headphones&qid=1700000000&sprefix=sony%2Caps%2C123&sr=8-2&tag=oldsharer-20";
+  $("affiliate-tag").value = "yourname-20";
+});
+
+setTheme("light");
+</script>
+</body>
+</html>
