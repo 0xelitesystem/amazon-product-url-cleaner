@@ -19,6 +19,7 @@
   --kraft-soft: #d4c098;
   --tape: #d97a1c;
   --tape-deep: #b86010;
+  --tape-ink: #9a500d;
   --ink: #2a1f0c;
   --ink-soft: #5c4a30;
   --rule: #b8a070;
@@ -203,7 +204,7 @@ button {
 button.primary {
   background: var(--tape);
   border-color: var(--tape-deep);
-  color: var(--paper);
+  color: #000000;
   font-weight: 700;
 }
 [data-theme="dark"] button.primary {
@@ -295,7 +296,7 @@ h2 {
 }
 .stripped .param-name {
   font-weight: 700;
-  color: var(--tape-deep);
+  color: var(--tape-ink);
 }
 [data-theme="dark"] .stripped .param-name { color: var(--tape); }
 .stripped .param-value {
@@ -332,7 +333,7 @@ footer {
   flex-wrap: wrap;
   gap: 0.85rem;
 }
-footer a { color: var(--tape-deep); text-decoration: none; }
+footer a { color: var(--tape-ink); text-decoration: none; }
 [data-theme="dark"] footer a { color: var(--tape); }
 footer a:hover { text-decoration: underline; }
 @media (max-width: 700px) {
@@ -370,6 +371,13 @@ footer a:hover { text-decoration: underline; }
 }
 :root { color-scheme: dark; }
 :root[data-theme="light"] { color-scheme: light; }
+
+/* Footer links are underlined so they never rely on colour alone (WCAG 1.4.1). */
+footer a { text-decoration: underline; text-underline-offset: 0.15em; }
+
+/* Light theme: orange hover text and focus outlines use the darker --tape-ink so they stay readable (WCAG 1.4.3, 1.4.11). */
+:root[data-theme="light"] .theme-btn:hover, :root[data-theme="light"] .copy-btn:hover { color: var(--tape-ink); border-color: var(--tape-ink); }
+:root[data-theme="light"] input:focus, :root[data-theme="light"] textarea:focus { outline-color: var(--tape-ink); }
 </style>
 </head>
 <body>
