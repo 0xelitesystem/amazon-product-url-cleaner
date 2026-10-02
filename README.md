@@ -17,7 +17,7 @@ Output:
 - Optional: same URL with your affiliate tag appended
 - Full list of tracking parameters that were stripped, with descriptions
 
-## Why
+## Why this exists
 
 A typical Amazon product URL looks like:
 
@@ -37,6 +37,8 @@ Reasons to clean it:
 - Sharing a link without inadvertently passing along someone else's affiliate tag (`tag=...`)
 - Extracting ASINs for legitimate inventory work
 - Understanding what tracking lives in those long URLs
+
+The tool is one HTML file with no tracking and no network calls, MIT licensed.
 
 ## What it strips
 
@@ -67,7 +69,7 @@ The intended use is:
 
 ## Privacy
 
-All parsing happens in your browser. The tool makes zero requests to Amazon or anywhere else. The URL you paste, the affiliate tag you enter, and all generated URLs stay on your device.
+All parsing happens in your browser. The tool makes zero requests to Amazon or anywhere else. The URL you paste, the affiliate tag you enter, and all generated URLs stay on your device. The only thing the page stores is your light or dark theme choice, in localStorage under the key `theme`.
 
 ## Run locally
 
